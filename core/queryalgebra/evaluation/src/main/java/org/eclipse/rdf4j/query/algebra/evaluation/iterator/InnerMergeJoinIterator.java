@@ -129,8 +129,11 @@ public class InnerMergeJoinIterator extends LookAheadIteration<BindingSet> {
 							BindingSet prevLeft = currentLeft;
 							currentLeft = leftIterator.next();
 							if (cmp.compare(value.apply(prevLeft), value.apply(currentLeft)) == 0) {
-								// we have duplicate keys on the leftIterator and need to reset the rightIterator
-								rightIterator.reset();
+								// we have duplicate keys on the leftIterator and need to reset the rightIterator (if it
+								// is resettable)
+								if (rightIterator.isResettable()) {
+									rightIterator.reset();
+								}
 							}
 						} else {
 							currentLeft = null;
