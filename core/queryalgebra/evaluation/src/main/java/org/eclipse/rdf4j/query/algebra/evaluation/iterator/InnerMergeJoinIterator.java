@@ -83,6 +83,8 @@ public class InnerMergeJoinIterator extends LookAheadIteration<BindingSet> {
 		return joined;
 	}
 
+	BindingSet prevLeft;
+
 	void calculateNext() {
 		if (next != null) {
 			return;
@@ -103,6 +105,19 @@ public class InnerMergeJoinIterator extends LookAheadIteration<BindingSet> {
 				Value right = value.apply(peekRight);
 
 				int compareTo = cmp.compare(left, right);
+
+				BindingSet temp = leftIterator.peek();
+				if (temp != null) {
+					if (prevLeft != currentLeft) {
+						prevLeft = currentLeft;
+						int compare = cmp.compare(left, value.apply(temp));
+						System.out.println(compare + "\tleft: " + left.toString() + "    next left:"
+								+ value.apply(temp).toString());
+
+					}
+
+				}
+
 				if (compareTo == 0) {
 					if (rightIterator.isResettable()) {
 						next = join(currentLeft, rightIterator.next(), true);
