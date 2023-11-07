@@ -106,17 +106,19 @@ public class InnerMergeJoinIterator extends LookAheadIteration<BindingSet> {
 
 				int compareTo = cmp.compare(left, right);
 
-				BindingSet temp = leftIterator.peek();
-				if (temp != null) {
-					if (prevLeft != currentLeft) {
-						prevLeft = currentLeft;
-						int compare = cmp.compare(left, value.apply(temp));
-						System.out.println(compare + "\tleft: " + left.toString() + "    next left:"
-								+ value.apply(temp).toString());
+				//TODO add an assert block that checks that the left iterator is sequential
 
-					}
-
-				}
+//				BindingSet temp = leftIterator.peek();
+//				if (temp != null) {
+//					if (prevLeft != currentLeft) {
+//						prevLeft = currentLeft;
+//						int compare = cmp.compare(left, value.apply(temp));
+//						System.out.println(compare + "\tleft: " + left.toString() + "    next left:"
+//								+ value.apply(temp).toString());
+//
+//					}
+//
+//				}
 
 				if (compareTo == 0) {
 					if (rightIterator.isResettable()) {
