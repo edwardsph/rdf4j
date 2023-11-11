@@ -12,6 +12,7 @@
 package org.eclipse.rdf4j.sail.shacl.ast.constraintcomponents;
 
 import java.util.List;
+import java.util.Optional;
 import java.util.Set;
 
 import org.eclipse.rdf4j.model.IRI;
@@ -19,16 +20,11 @@ import org.eclipse.rdf4j.model.Literal;
 import org.eclipse.rdf4j.model.Model;
 import org.eclipse.rdf4j.model.Resource;
 import org.eclipse.rdf4j.model.Value;
-import org.eclipse.rdf4j.model.vocabulary.SHACL;
-import org.eclipse.rdf4j.sail.shacl.SourceConstraintComponent;
 import org.eclipse.rdf4j.sail.shacl.ValidationSettings;
-import org.eclipse.rdf4j.sail.shacl.ast.ShaclShapeParsingException;
 import org.eclipse.rdf4j.sail.shacl.ast.SparqlFragment;
 import org.eclipse.rdf4j.sail.shacl.ast.StatementMatcher;
 import org.eclipse.rdf4j.sail.shacl.ast.ValidationApproach;
 import org.eclipse.rdf4j.sail.shacl.ast.paths.Path;
-import org.eclipse.rdf4j.sail.shacl.ast.planNodes.CheckLessThanValuesBasedOnPathAndPredicate;
-import org.eclipse.rdf4j.sail.shacl.ast.planNodes.DebugPlanNode;
 import org.eclipse.rdf4j.sail.shacl.ast.planNodes.PlanNode;
 import org.eclipse.rdf4j.sail.shacl.ast.planNodes.PlanNodeProvider;
 import org.eclipse.rdf4j.sail.shacl.ast.planNodes.ShiftToPropertyShape;
@@ -60,18 +56,14 @@ abstract class AbstractPairwiseConstraintComponent extends AbstractConstraintCom
 	public PlanNode generateTransactionalValidationPlan(ConnectionsGroup connectionsGroup,
 			ValidationSettings validationSettings, PlanNodeProvider overrideTargetNode, Scope scope) {
 
-		if (scope != Scope.propertyShape) {
-			throw new ShaclShapeParsingException(
-					"sh:" + getIRI().getLocalName() + " can only be used in property shapes!", getId());
-		}
-
 		StatementMatcher.StableRandomVariableProvider stableRandomVariableProvider = new StatementMatcher.StableRandomVariableProvider();
 
 		TargetChain targetChain = getTargetChain();
 
 		EffectiveTarget effectiveTarget = targetChain.getEffectiveTarget(scope,
 				connectionsGroup.getRdfsSubClassOfReasoner(), stableRandomVariableProvider);
-		Path path = targetChain.getPath().get();
+
+		Optional<Path> path = targetChain.getPath();
 
 		PlanNode allTargets;
 
@@ -79,21 +71,39 @@ abstract class AbstractPairwiseConstraintComponent extends AbstractConstraintCom
 			allTargets = effectiveTarget.extend(overrideTargetNode.getPlanNode(), connectionsGroup,
 					validationSettings.getDataGraph(), scope, EffectiveTarget.Extend.right, false, null);
 		} else {
-			allTargets = getAllTargetsIncludingThoseAddedByPath(connectionsGroup, validationSettings, scope,
-					effectiveTarget, path, true);
+			if (scope == Scope.propertyShape) {
+				allTargets = getAllTargetsIncludingThoseAddedByPath(connectionsGroup, validationSettings, scope,
+						effectiveTarget, path.get(), true);
 
-			PlanNode allTargetsBasedOnPredicate = getAllTargetsBasedOnPredicate(connectionsGroup, validationSettings,
-					effectiveTarget);
+				PlanNode allTargetsBasedOnPredicate = getAllTargetsBasedOnPredicate(connectionsGroup,
+						validationSettings,
+						effectiveTarget);
 
-			allTargets = Unique.getInstance(UnionNode.getInstance(allTargets, allTargetsBasedOnPredicate), false);
+				allTargets = Unique.getInstance(UnionNode.getInstance(allTargets, allTargetsBasedOnPredicate), false);
+
+			} else {
+				allTargets = effectiveTarget.getPlanNode(connectionsGroup, validationSettings.getDataGraph(), scope,
+						false, null);
+
+				PlanNode allTargetsBasedOnPredicate = getAllTargetsBasedOnPredicate(connectionsGroup,
+						validationSettings,
+						effectiveTarget);
+
+				allTargets = Unique.getInstance(UnionNode.getInstance(allTargets, allTargetsBasedOnPredicate), false);
+			}
+
 		}
 
 		StatementMatcher.Variable<Resource> subject = new StatementMatcher.Variable<>("a");
 		StatementMatcher.Variable<Value> object = new StatementMatcher.Variable<>("c");
 
-		SparqlFragment targetQueryFragment = path
-				.getTargetQueryFragment(subject, object, connectionsGroup.getRdfsSubClassOfReasoner(),
-						stableRandomVariableProvider, Set.of());
+		SparqlFragment targetQueryFragment = null;
+
+		if (path.isPresent()) {
+			targetQueryFragment = path.get()
+					.getTargetQueryFragment(subject, object, connectionsGroup.getRdfsSubClassOfReasoner(),
+							stableRandomVariableProvider, Set.of());
+		}
 
 		return getPairwiseCheck(connectionsGroup, validationSettings, allTargets, subject, object, targetQueryFragment);
 	}

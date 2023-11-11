@@ -12,31 +12,18 @@
 package org.eclipse.rdf4j.sail.shacl.ast.constraintcomponents;
 
 import java.util.List;
-import java.util.Optional;
-import java.util.Set;
 
 import org.eclipse.rdf4j.model.IRI;
 import org.eclipse.rdf4j.model.Literal;
-import org.eclipse.rdf4j.model.Model;
 import org.eclipse.rdf4j.model.Resource;
 import org.eclipse.rdf4j.model.Value;
 import org.eclipse.rdf4j.model.vocabulary.SHACL;
 import org.eclipse.rdf4j.sail.shacl.SourceConstraintComponent;
 import org.eclipse.rdf4j.sail.shacl.ValidationSettings;
-import org.eclipse.rdf4j.sail.shacl.ast.ShaclShapeParsingException;
 import org.eclipse.rdf4j.sail.shacl.ast.SparqlFragment;
 import org.eclipse.rdf4j.sail.shacl.ast.StatementMatcher;
-import org.eclipse.rdf4j.sail.shacl.ast.ValidationApproach;
-import org.eclipse.rdf4j.sail.shacl.ast.paths.Path;
 import org.eclipse.rdf4j.sail.shacl.ast.planNodes.CheckLessThanValuesBasedOnPathAndPredicate;
 import org.eclipse.rdf4j.sail.shacl.ast.planNodes.PlanNode;
-import org.eclipse.rdf4j.sail.shacl.ast.planNodes.PlanNodeProvider;
-import org.eclipse.rdf4j.sail.shacl.ast.planNodes.UnionNode;
-import org.eclipse.rdf4j.sail.shacl.ast.planNodes.Unique;
-import org.eclipse.rdf4j.sail.shacl.ast.planNodes.UnorderedSelect;
-import org.eclipse.rdf4j.sail.shacl.ast.planNodes.ValidationTuple;
-import org.eclipse.rdf4j.sail.shacl.ast.targets.EffectiveTarget;
-import org.eclipse.rdf4j.sail.shacl.ast.targets.TargetChain;
 import org.eclipse.rdf4j.sail.shacl.wrapper.data.ConnectionsGroup;
 
 public class LessThanConstraintComponent extends AbstractPairwiseConstraintComponent {
