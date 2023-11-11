@@ -12,7 +12,6 @@
 package org.eclipse.rdf4j.sail.shacl.ast.constraintcomponents;
 
 import java.util.List;
-import java.util.Optional;
 import java.util.Set;
 
 import org.eclipse.rdf4j.model.IRI;
@@ -23,6 +22,7 @@ import org.eclipse.rdf4j.model.Value;
 import org.eclipse.rdf4j.model.vocabulary.SHACL;
 import org.eclipse.rdf4j.sail.shacl.SourceConstraintComponent;
 import org.eclipse.rdf4j.sail.shacl.ValidationSettings;
+import org.eclipse.rdf4j.sail.shacl.ast.ShaclShapeParsingException;
 import org.eclipse.rdf4j.sail.shacl.ast.SparqlFragment;
 import org.eclipse.rdf4j.sail.shacl.ast.StatementMatcher;
 import org.eclipse.rdf4j.sail.shacl.ast.ValidationApproach;
@@ -38,17 +38,15 @@ import org.eclipse.rdf4j.sail.shacl.ast.targets.EffectiveTarget;
 import org.eclipse.rdf4j.sail.shacl.ast.targets.TargetChain;
 import org.eclipse.rdf4j.sail.shacl.wrapper.data.ConnectionsGroup;
 
-public class DisjointConstraintComponent extends AbstractConstraintComponent {
-
-	private final IRI predicate;
+public class DisjointConstraintComponent extends AbstractPairwiseConstraintComponent {
 
 	public DisjointConstraintComponent(IRI predicate) {
-		this.predicate = predicate;
+		super(predicate);
 	}
 
 	@Override
-	public void toModel(Resource subject, IRI predicate, Model model, Set<Resource> cycleDetection) {
-		model.add(subject, SHACL.DISJOINT, this.predicate);
+	IRI getIRI() {
+		return SHACL.DISJOINT;
 	}
 
 	@Override
@@ -56,87 +54,11 @@ public class DisjointConstraintComponent extends AbstractConstraintComponent {
 		return SourceConstraintComponent.DisjointConstraintComponent;
 	}
 
-	@Override
-	public PlanNode generateTransactionalValidationPlan(ConnectionsGroup connectionsGroup,
-			ValidationSettings validationSettings, PlanNodeProvider overrideTargetNode, Scope scope) {
-		StatementMatcher.StableRandomVariableProvider stableRandomVariableProvider = new StatementMatcher.StableRandomVariableProvider();
-
-		TargetChain targetChain = getTargetChain();
-
-		EffectiveTarget effectiveTarget = targetChain.getEffectiveTarget(scope,
-				connectionsGroup.getRdfsSubClassOfReasoner(), stableRandomVariableProvider);
-		Optional<Path> path = targetChain.getPath();
-
-		PlanNode allTargets;
-
-		if (overrideTargetNode != null) {
-			allTargets = effectiveTarget.extend(overrideTargetNode.getPlanNode(), connectionsGroup,
-					validationSettings.getDataGraph(), scope, EffectiveTarget.Extend.right, false, null);
-		} else {
-
-			PlanNode targets = effectiveTarget.getPlanNode(connectionsGroup, validationSettings.getDataGraph(),
-					scope, true, null);
-
-			PlanNode allTargetsBasedOnPredicate = getAllTargetsBasedOnPredicate(connectionsGroup, validationSettings,
-					effectiveTarget);
-
-			allTargets = Unique.getInstance(UnionNode.getInstance(allTargetsBasedOnPredicate, targets), false);
-		}
-
-		StatementMatcher.Variable<Resource> subject = new StatementMatcher.Variable<>("a");
-		StatementMatcher.Variable<Value> object = new StatementMatcher.Variable<>("c");
-
-		SparqlFragment targetQueryFragment = null;
-		if (path.isPresent()) {
-			targetQueryFragment = path.get()
-					.getTargetQueryFragment(subject, object, connectionsGroup.getRdfsSubClassOfReasoner(),
-							stableRandomVariableProvider, Set.of());
-		}
-
+	PlanNode getPairwiseCheck(ConnectionsGroup connectionsGroup, ValidationSettings validationSettings,
+			PlanNode allTargets, StatementMatcher.Variable<Resource> subject, StatementMatcher.Variable<Value> object,
+			SparqlFragment targetQueryFragment) {
 		return new CheckDisjointValuesBasedOnPathAndPredicate(connectionsGroup.getBaseConnection(),
 				validationSettings.getDataGraph(), allTargets, predicate, subject, object, targetQueryFragment);
-	}
-
-	private PlanNode getAllTargetsBasedOnPredicate(ConnectionsGroup connectionsGroup,
-			ValidationSettings validationSettings, EffectiveTarget effectiveTarget) {
-		PlanNode addedByPredicate = new UnorderedSelect(connectionsGroup.getAddedStatements(), null, predicate, null,
-				validationSettings.getDataGraph(), (s, d) -> {
-					return new ValidationTuple(s.getSubject(), Scope.propertyShape, false, d);
-				});
-
-		PlanNode removedByPredicate = new UnorderedSelect(connectionsGroup.getRemovedStatements(), null, predicate,
-				null, validationSettings.getDataGraph(), (s, d) -> {
-					return new ValidationTuple(s.getSubject(), Scope.propertyShape, false, d);
-				});
-
-		PlanNode targetFilter1 = effectiveTarget.getTargetFilter(connectionsGroup, validationSettings.getDataGraph(),
-				addedByPredicate);
-		PlanNode targetFilter2 = effectiveTarget.getTargetFilter(connectionsGroup, validationSettings.getDataGraph(),
-				removedByPredicate);
-
-		PlanNode allTargetsBasedOnPredicate = Unique.getInstance(UnionNode.getInstance(targetFilter1, targetFilter2),
-				false);
-		return allTargetsBasedOnPredicate;
-	}
-
-	@Override
-	public ValidationApproach getPreferredValidationApproach(ConnectionsGroup connectionsGroup) {
-		return ValidationApproach.Transactional;
-	}
-
-	@Override
-	public ValidationApproach getOptimalBulkValidationApproach() {
-		return ValidationApproach.Transactional;
-	}
-
-	@Override
-	public boolean requiresEvaluation(ConnectionsGroup connectionsGroup, Scope scope, Resource[] dataGraph,
-			StatementMatcher.StableRandomVariableProvider stableRandomVariableProvider) {
-
-		// todo both consider the target chain with added and removed values (path), and also added and removed values
-		// for the predicate path
-
-		return true;
 	}
 
 	@Override
