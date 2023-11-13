@@ -907,7 +907,7 @@ class LmdbSailStore implements SailStore {
 
 		@Override
 		public Comparator<Value> getComparator() {
-			throw new UnsupportedOperationException("Not implemented yet");
+			return null;
 		}
 	}
 }
