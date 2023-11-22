@@ -1491,8 +1491,7 @@ public class DefaultEvaluationStrategy implements EvaluationStrategy, FederatedS
 		@Override
 		protected void handleClose() throws QueryEvaluationException {
 			try {
-				queryModelNode.setTotalTimeNanosActual(
-						queryModelNode.getTotalTimeNanosActual() + stopwatch.elapsed(TimeUnit.NANOSECONDS));
+				queryModelNode.setTotalTimeNanosActual(stopwatch.elapsed(TimeUnit.NANOSECONDS));
 			} finally {
 				super.handleClose();
 
