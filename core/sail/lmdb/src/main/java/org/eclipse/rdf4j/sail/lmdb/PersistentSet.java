@@ -121,7 +121,7 @@ class PersistentSet<T extends Serializable> extends AbstractSet<T> {
 			mdb_txn_abort(writeTxn);
 			writeTxn = 0;
 		}
-		writeTxnPp.free();
+		// writeTxnPp.free(); freeing the pointer buffer causes a crash
 		mdb_env_close(env);
 		FileUtils.deleteDirectory(dbDir.toFile());
 	}

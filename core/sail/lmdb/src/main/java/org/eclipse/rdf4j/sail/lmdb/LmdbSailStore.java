@@ -263,9 +263,6 @@ class LmdbSailStore implements SailStore {
 						}
 					} finally {
 						try {
-							if (unusedIds != null)
-								unusedIds.close();
-						} finally {
 							if (tripleStore != null) {
 								try {
 									running.set(false);
@@ -282,6 +279,11 @@ class LmdbSailStore implements SailStore {
 									tripleStore.close();
 								}
 
+							}
+
+						} finally {
+							if (unusedIds != null) {
+								unusedIds.close();
 							}
 						}
 
