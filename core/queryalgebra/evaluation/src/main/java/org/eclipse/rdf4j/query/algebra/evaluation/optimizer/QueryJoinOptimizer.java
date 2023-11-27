@@ -55,6 +55,14 @@ import org.eclipse.rdf4j.query.algebra.helpers.TupleExprs;
  */
 public class QueryJoinOptimizer implements QueryOptimizer {
 
+	/**
+	 * When deciding if merge join is the correct approach we will compare the cardinality of the two join arguments, if
+	 * one is bigger than the other by a factor of MERGE_JOIN_CARDINALITY_SIZE_DIFF_MULTIPLIER then we will not use
+	 * merge join. As an example, if the limit is 10 and the left cardinality if 50 000 and the right cardinality is 500
+	 * 000 then we will use merge join, but if it is 500 001 then we will not.
+	 */
+	private static final int MERGE_JOIN_CARDINALITY_SIZE_DIFF_MULTIPLIER = 10;
+
 	protected final EvaluationStatistics statistics;
 	private final boolean trackResultSize;
 	private final TripleSource tripleSource;
@@ -225,6 +233,8 @@ public class QueryJoinOptimizer implements QueryOptimizer {
 
 				if (priorityJoins == null && !orderedJoinArgs.isEmpty()) {
 
+					double cardinality = 0;
+
 					while (orderedJoinArgs.size() > 1) {
 
 						Set<Var> supportedOrders = orderedJoinArgs.peekFirst().getSupportedOrders(tripleSource);
@@ -236,11 +246,14 @@ public class QueryJoinOptimizer implements QueryOptimizer {
 						TupleExpr second = orderedJoinArgs.removeFirst();
 						Set<Var> SupportedOrders = new HashSet<>(first.getSupportedOrders(tripleSource));
 						SupportedOrders.retainAll(second.getSupportedOrders(tripleSource));
-						if (SupportedOrders.isEmpty() || joinOnMultipleVars(first, second)) {
+						if (SupportedOrders.isEmpty() || joinOnMultipleVars(first, second) || joinSizeIsTooDifferent(
+								Math.max(cardinality, first.getResultSizeEstimate()), second.getResultSizeEstimate())) {
 							orderedJoinArgs.addFirst(second);
 							orderedJoinArgs.addFirst(first);
 							break;
 						} else {
+							cardinality = Math.max(cardinality, first.getResultSizeEstimate());
+							cardinality = Math.max(cardinality, second.getResultSizeEstimate());
 							Join join = new Join(first, second);
 							join.setOrder((Var) SupportedOrders.toArray()[0]);
 							join.setMergeJoin(true);
@@ -282,6 +295,15 @@ public class QueryJoinOptimizer implements QueryOptimizer {
 			} finally {
 				boundVars = origBoundVars;
 			}
+		}
+
+		private boolean joinSizeIsTooDifferent(double cardinality, double second) {
+			if (cardinality > second && cardinality / MERGE_JOIN_CARDINALITY_SIZE_DIFF_MULTIPLIER > second) {
+				return true;
+			} else if (second > cardinality && second / MERGE_JOIN_CARDINALITY_SIZE_DIFF_MULTIPLIER > cardinality) {
+				return true;
+			}
+			return false;
 		}
 
 		private boolean joinOnMultipleVars(TupleExpr first, TupleExpr second) {
