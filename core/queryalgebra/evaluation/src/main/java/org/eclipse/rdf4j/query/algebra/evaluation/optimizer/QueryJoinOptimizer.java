@@ -295,9 +295,10 @@ public class QueryJoinOptimizer implements QueryOptimizer {
 			}
 			int overlap = 0;
 			for (String firstBindingName : firstBindingNames) {
-				if (secondBindingNames.contains(firstBindingName)) {
+				if (!firstBindingName.startsWith("_const_") && secondBindingNames.contains(firstBindingName)) {
 					overlap++;
 				}
+
 				if (overlap > 1) {
 					return true;
 				}
