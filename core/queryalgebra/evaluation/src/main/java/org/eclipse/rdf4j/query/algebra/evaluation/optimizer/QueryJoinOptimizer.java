@@ -61,7 +61,7 @@ public class QueryJoinOptimizer implements QueryOptimizer {
 	 * merge join. As an example, if the limit is 10 and the left cardinality if 50 000 and the right cardinality is 500
 	 * 000 then we will use merge join, but if it is 500 001 then we will not.
 	 */
-	private static final int MERGE_JOIN_CARDINALITY_SIZE_DIFF_MULTIPLIER = 10;
+	public static int MERGE_JOIN_CARDINALITY_SIZE_DIFF_MULTIPLIER = 10;
 
 	protected final EvaluationStatistics statistics;
 	private final boolean trackResultSize;

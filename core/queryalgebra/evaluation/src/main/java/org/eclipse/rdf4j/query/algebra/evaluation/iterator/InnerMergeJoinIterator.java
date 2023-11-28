@@ -22,6 +22,7 @@ import org.eclipse.rdf4j.query.Binding;
 import org.eclipse.rdf4j.query.BindingSet;
 import org.eclipse.rdf4j.query.MutableBindingSet;
 import org.eclipse.rdf4j.query.QueryEvaluationException;
+import org.eclipse.rdf4j.query.algebra.evaluation.ArrayBindingSet;
 import org.eclipse.rdf4j.query.algebra.evaluation.QueryEvaluationStep;
 import org.eclipse.rdf4j.query.algebra.evaluation.impl.QueryEvaluationContext;
 
@@ -75,6 +76,11 @@ public class InnerMergeJoinIterator extends LookAheadIteration<BindingSet> {
 		} else {
 			joined = context.createBindingSet(left);
 		}
+		if (joined instanceof ArrayBindingSet && right instanceof ArrayBindingSet) {
+			((ArrayBindingSet) joined).addAll((ArrayBindingSet) right);
+			return joined;
+		}
+
 		for (Binding binding : right) {
 			if (!joined.hasBinding(binding.getName())) {
 				joined.addBinding(binding);
