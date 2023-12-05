@@ -11,7 +11,9 @@
 package org.eclipse.rdf4j.query.algebra.evaluation.impl;
 
 import java.util.ArrayList;
+import java.util.HashMap;
 import java.util.List;
+import java.util.Map;
 import java.util.Objects;
 import java.util.UUID;
 import java.util.concurrent.TimeUnit;
@@ -1462,14 +1464,14 @@ public class DefaultEvaluationStrategy implements EvaluationStrategy, FederatedS
 
 		CloseableIteration<BindingSet> iterator;
 		QueryModelNode queryModelNode;
-
-		Stopwatch stopwatch = Stopwatch.createUnstarted();
+		Stopwatch stopwatch = Stopwatch.createStarted();
 
 		public TimedIterator(CloseableIteration<BindingSet> iterator,
 				QueryModelNode queryModelNode) {
 			super(iterator);
 			this.iterator = iterator;
 			this.queryModelNode = queryModelNode;
+			stopwatch.stop();
 		}
 
 		@Override
@@ -1491,7 +1493,9 @@ public class DefaultEvaluationStrategy implements EvaluationStrategy, FederatedS
 		@Override
 		protected void handleClose() throws QueryEvaluationException {
 			try {
-				queryModelNode.setTotalTimeNanosActual(stopwatch.elapsed(TimeUnit.NANOSECONDS));
+				long totalTimeNanosActual = queryModelNode.getTotalTimeNanosActual();
+				queryModelNode
+						.setTotalTimeNanosActual((totalTimeNanosActual + stopwatch.elapsed(TimeUnit.NANOSECONDS)));
 			} finally {
 				super.handleClose();
 
