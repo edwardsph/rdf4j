@@ -433,15 +433,29 @@ public class StatementPattern extends AbstractQueryModelNode implements TupleExp
 
 	@Override
 	public Set<Var> getSupportedOrders(AvailableStatementOrder tripleSource) {
-		Resource subject = subjectVar.hasValue() ? (Resource) subjectVar.getValue() : null;
-		IRI predicate = predicateVar.hasValue() ? (IRI) predicateVar.getValue() : null;
+		Value subject = subjectVar.hasValue() ? subjectVar.getValue() : null;
+		if (!(subject instanceof Resource)) {
+			return Set.of();
+		}
+
+		Value predicate = predicateVar.hasValue() ? predicateVar.getValue() : null;
+		if (!(predicate instanceof IRI)) {
+			return Set.of();
+		}
+
+		Value context = contextVar != null && contextVar.hasValue() ? contextVar.getValue() : null;
+		if (!(context instanceof Resource)) {
+			return Set.of();
+		}
+
 		Value object = objectVar.hasValue() ? objectVar.getValue() : null;
-		Resource context = contextVar != null && contextVar.hasValue() ? (Resource) contextVar.getValue() : null;
+
 		Set<StatementOrder> supportedOrders;
 		if (contextVar == null) {
-			supportedOrders = tripleSource.getSupportedOrders(subject, predicate, object);
+			supportedOrders = tripleSource.getSupportedOrders((Resource) subject, (IRI) predicate, object);
 		} else {
-			supportedOrders = tripleSource.getSupportedOrders(subject, predicate, object, context);
+			supportedOrders = tripleSource.getSupportedOrders((Resource) subject, (IRI) predicate, object,
+					(Resource) context);
 		}
 		return supportedOrders.stream()
 				.map(statementOrder -> {
