@@ -20,6 +20,7 @@ import java.util.Objects;
 import java.util.Set;
 import java.util.stream.Collectors;
 
+import org.eclipse.rdf4j.common.annotation.Experimental;
 import org.eclipse.rdf4j.common.order.AvailableStatementOrder;
 import org.eclipse.rdf4j.common.order.StatementOrder;
 import org.eclipse.rdf4j.model.IRI;
@@ -62,6 +63,8 @@ public class StatementPattern extends AbstractQueryModelNode implements TupleExp
 	private Var contextVar;
 
 	private StatementOrder statementOrder;
+
+	private String indexName;
 
 	private Set<String> assuredBindingNames;
 	private List<Var> varList;
@@ -359,6 +362,10 @@ public class StatementPattern extends AbstractQueryModelNode implements TupleExp
 			sb.append(" [statementOrder: ").append(statementOrder).append("] ");
 		}
 
+		if (indexName != null) {
+			sb.append(" [index: ").append(indexName).append("] ");
+		}
+
 		if (scope == Scope.NAMED_CONTEXTS) {
 			sb.append(" FROM NAMED CONTEXT");
 		}
@@ -513,5 +520,15 @@ public class StatementPattern extends AbstractQueryModelNode implements TupleExp
 		}
 
 		throw new IllegalStateException("Unknown StatementOrder: " + statementOrder);
+	}
+
+	@Experimental
+	public String getIndexName() {
+		return indexName;
+	}
+
+	@Experimental
+	public void setIndexName(String indexName) {
+		this.indexName = indexName;
 	}
 }
