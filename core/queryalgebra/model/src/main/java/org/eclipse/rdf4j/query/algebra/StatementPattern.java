@@ -439,7 +439,6 @@ public class StatementPattern extends AbstractQueryModelNode implements TupleExp
 		Resource context = contextVar != null && contextVar.hasValue() ? (Resource) contextVar.getValue() : null;
 		Set<StatementOrder> supportedOrders;
 		if (contextVar == null) {
-
 			supportedOrders = tripleSource.getSupportedOrders(subject, predicate, object);
 		} else {
 			supportedOrders = tripleSource.getSupportedOrders(subject, predicate, object, context);
