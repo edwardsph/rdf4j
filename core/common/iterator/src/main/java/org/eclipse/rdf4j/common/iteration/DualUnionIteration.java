@@ -14,6 +14,7 @@ package org.eclipse.rdf4j.common.iteration;
 import java.util.Comparator;
 import java.util.NoSuchElementException;
 
+import org.eclipse.rdf4j.common.annotation.Experimental;
 import org.eclipse.rdf4j.common.order.StatementOrder;
 import org.eclipse.rdf4j.model.Value;
 
@@ -40,6 +41,7 @@ public class DualUnionIteration<E> implements CloseableIteration<E> {
 		this.cmp = null;
 	}
 
+	@Experimental
 	public DualUnionIteration(StatementOrder statementOrder, Comparator<Value> cmp,
 			CloseableIteration<? extends E> iteration1, CloseableIteration<? extends E> iteration2) {
 		this.iteration1 = iteration1;
@@ -63,6 +65,7 @@ public class DualUnionIteration<E> implements CloseableIteration<E> {
 		}
 	}
 
+	@Experimental
 	public static <E, X extends Exception> CloseableIteration<? extends E> getWildcardInstance(StatementOrder order,
 			Comparator<Value> cmp,
 			CloseableIteration<? extends E> leftIteration, CloseableIteration<? extends E> rightIteration) {
