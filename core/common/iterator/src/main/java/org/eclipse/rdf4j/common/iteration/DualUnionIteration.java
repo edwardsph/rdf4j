@@ -53,7 +53,7 @@ public class DualUnionIteration<E> implements CloseableIteration<E> {
 		throw new UnsupportedOperationException("Not implemented yet");
 	}
 
-	public static <E, X extends Exception> CloseableIteration<? extends E> getWildcardInstance(
+	public static <E> CloseableIteration<? extends E> getWildcardInstance(
 			CloseableIteration<? extends E> leftIteration, CloseableIteration<? extends E> rightIteration) {
 
 		if (rightIteration instanceof EmptyIteration) {
@@ -66,7 +66,7 @@ public class DualUnionIteration<E> implements CloseableIteration<E> {
 	}
 
 	@Experimental
-	public static <E, X extends Exception> CloseableIteration<? extends E> getWildcardInstance(StatementOrder order,
+	public static <E> CloseableIteration<? extends E> getWildcardInstance(StatementOrder order,
 			Comparator<Value> cmp,
 			CloseableIteration<? extends E> leftIteration, CloseableIteration<? extends E> rightIteration) {
 
@@ -87,7 +87,7 @@ public class DualUnionIteration<E> implements CloseableIteration<E> {
 		}
 	}
 
-	public static <E, X extends Exception> CloseableIteration<E> getInstance(CloseableIteration<E> leftIteration,
+	public static <E> CloseableIteration<E> getInstance(CloseableIteration<E> leftIteration,
 			CloseableIteration<E> rightIteration) {
 
 		if (rightIteration instanceof EmptyIteration) {
